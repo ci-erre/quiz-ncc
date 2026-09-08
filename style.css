@@ -1,105 +1,198 @@
-/* style.css — QuizNCC. Mobile-first, una colonna, tema chiaro/scuro automatico. */
+/* style.css — QuizNCC
+   Vocabolario visivo: le targhe stradali di Milano (capitali nere su smalto bianco)
+   e la mappa del trasporto pubblico (l'itinerario disegnato come una linea di fermate).
+   Il rosso è quello dello stemma di Milano e appare solo quando qualcosa è sbagliato. */
+
 :root {
-  --bg: #f4f3ee; --card: #ffffff; --ink: #1b1b1f; --muted: #6b6b73; --line: #e2e1da;
-  --accent: #1f3a8a; --accent-ink: #ffffff; --ok: #2e7d4f; --ok-bg: #e3f3ea;
-  --no: #b3261e; --no-bg: #fbe7e5; --warn-bg: #fff4d6;
-  --radius: 14px; --pad: 16px;
+  --muro:   #e7e8ea;   /* fondo: intonaco grigio freddo */
+  --targa:  #ffffff;   /* superfici: smalto della targa */
+  --ink:    #000000;   /* testo: nero pieno delle iscrizioni */
+  --ink-2:  #565b63;   /* testo secondario */
+  --filo:   #d0d3d8;   /* filetti */
+  --rosso:  #c8102e;   /* stemma di Milano: errore, bocciatura */
+  --rosso-t:#fbe9ec;
+  --verde:  #00794a;   /* risposta esatta, percorso pulito */
+  --verde-t:#e3f2ea;
+  --geo:    #00794a;
+  --leg:    #16457e;
+  --reg:    #b87503;
+  --lin:    #6b3fa0;
+  --sans: Archivo, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --targhe: "Bodoni Moda", "Bodoni 72", Didot, "Times New Roman", serif;
 }
 @media (prefers-color-scheme: dark) {
-  :root { --bg: #131316; --card: #1e1e23; --ink: #ececf0; --muted: #a0a0aa; --line: #2e2e36;
-          --accent: #7f9cf5; --accent-ink: #0f1a3d; --ok: #6cc596; --ok-bg: #16351f;
-          --no: #f28b82; --no-bg: #3d1a17; --warn-bg: #3a2f10; }
+  :root {
+    --muro: #131417; --targa: #1e2024; --ink: #f4f5f6; --ink-2: #a2a8b2; --filo: #313640;
+    --rosso: #ff6b6b; --rosso-t: #3a1a1d; --verde: #56c48d; --verde-t: #12301f;
+    --geo: #56c48d; --leg: #7aa7e8; --reg: #e0a53c; --lin: #b58ae0;
+  }
 }
+
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
-body { margin: 0; background: var(--bg); color: var(--ink);
-  font: 17px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif; }
-a { color: var(--accent); text-decoration: none; }
-.top { display: flex; justify-content: space-between; align-items: center; padding: 12px var(--pad);
-  padding-top: max(12px, env(safe-area-inset-top)); border-bottom: 1px solid var(--line); background: var(--card); }
-.brand { font-weight: 700; color: var(--ink); font-size: 18px; }
-.toplink { font-weight: 600; min-height: 44px; display: inline-flex; align-items: center; }
-main { max-width: 640px; margin: 0 auto; padding: var(--pad); padding-bottom: max(32px, env(safe-area-inset-bottom)); }
-h1 { font-size: 22px; margin: 8px 0 16px; }
-h2 { font-size: 17px; margin: 24px 0 8px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
-p { margin: 8px 0; }
-.muted { color: var(--muted); }
-.small { font-size: 14px; }
+body { margin: 0; background: var(--muro); color: var(--ink); font-family: var(--sans);
+  font-size: 17px; line-height: 1.5; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 3px solid var(--rosso); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 
-/* Card e liste */
-.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--pad); margin-bottom: 12px; }
-.menu { display: grid; gap: 12px; }
-.menu a { display: block; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
-  padding: var(--pad); color: var(--ink); min-height: 64px; }
-.menu a strong { display: block; font-size: 18px; }
-.menu a span { color: var(--muted); font-size: 15px; }
-.list { display: flex; flex-direction: column; gap: 8px; }
-.row { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--card);
-  border: 1px solid var(--line); border-radius: var(--radius); padding: 12px var(--pad); min-height: 56px; color: var(--ink); }
-.row .t { flex: 1; }
-.row .n { color: var(--muted); font-variant-numeric: tabular-nums; min-width: 2.2em; }
-.badge { font-size: 13px; padding: 2px 8px; border-radius: 999px; background: var(--line); color: var(--muted); white-space: nowrap; }
-.badge.ok { background: var(--ok-bg); color: var(--ok); }
-.badge.no { background: var(--no-bg); color: var(--no); }
+/* Testata: una fascia di targa, con il filetto che la chiude */
+.top { display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 20px; padding-top: max(10px, env(safe-area-inset-top));
+  background: var(--targa); border-bottom: 1px solid var(--filo); }
+.brand { font-weight: 700; font-size: 17px; letter-spacing: -.01em; }
+.toplink { font-size: 15px; color: var(--ink-2); min-height: 44px; display: inline-flex; align-items: center; }
+main { max-width: 620px; margin: 0 auto; padding: 24px 20px;
+  padding-bottom: max(40px, env(safe-area-inset-bottom)); }
+
+h1 { font-size: 27px; line-height: 1.2; letter-spacing: -.02em; font-weight: 600; margin: 0 0 20px; }
+h2 { font-size: 15px; font-weight: 600; color: var(--ink-2); margin: 32px 0 10px;
+  padding-bottom: 6px; border-bottom: 1px solid var(--filo); }
+p { margin: 10px 0; }
+.muted { color: var(--ink-2); }
+.small { font-size: 14.5px; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* La prova: unica superficie grande della pagina, il resto è elenco */
+.prova { background: var(--targa); border: 1px solid var(--filo); padding: 22px 20px 20px; }
+.prova h2 { margin: 0 0 4px; border: 0; padding: 0; font-size: 21px; color: var(--ink); letter-spacing: -.01em; }
+.prova .quando { color: var(--ink-2); font-size: 15px; margin: 0 0 18px; }
+.prova .esito-scorso { display: flex; align-items: center; gap: 12px; margin-bottom: 18px;
+  padding-top: 16px; border-top: 1px solid var(--filo); }
+.prova .esito-scorso .small { color: var(--ink-2); }
+
+/* Riga con un comando dentro (la lingua d'esame) */
+.riga.cambio { align-items: center; gap: 12px; }
+.riga.cambio .scelte { display: flex; gap: 6px; flex-wrap: nowrap; }
+
+/* Elenchi: righe separate da un filo, non carte */
+.righe { background: var(--targa); border: 1px solid var(--filo); }
+.riga { display: flex; align-items: center; gap: 14px; padding: 14px 16px; min-height: 60px;
+  border-bottom: 1px solid var(--filo); }
+.riga:last-child { border-bottom: 0; }
+.riga .tit { flex: 1; font-weight: 500; }
+.riga .sub { display: block; color: var(--ink-2); font-size: 14.5px; font-weight: 400; }
+.riga .cifra { color: var(--ink-2); font-size: 15px; font-variant-numeric: tabular-nums; }
+.riga .n { color: var(--ink-2); font-size: 14px; font-variant-numeric: tabular-nums; min-width: 2.4em; }
+/* filetto colorato: dice a quale sezione d'esame appartiene la riga */
+.riga.sez { border-left: 4px solid var(--sez, transparent); padding-left: 12px; }
+.sez-geo { --sez: var(--geo); } .sez-leg { --sez: var(--leg); }
+.sez-reg { --sez: var(--reg); } .sez-lin { --sez: var(--lin); }
+
+/* Pagella: 16 caselle, 4 per argomento. Rende visibile la regola del 2 per sezione */
+.pagella { background: var(--targa); border: 1px solid var(--filo); padding: 18px 20px; }
+.pagella .r { display: flex; align-items: center; gap: 12px; padding: 9px 0; }
+.pagella .r + .r { border-top: 1px solid var(--filo); }
+.pagella .nome { flex: 1; font-size: 15.5px; }
+.pagella .r.sotto .nome { color: var(--rosso); font-weight: 600; }
+.caselle { display: flex; gap: 5px; }
+.casella { width: 15px; height: 15px; border: 1.5px solid var(--ink-2); background: transparent; }
+.casella.si { background: var(--ink); border-color: var(--ink); }
+.casella.no { border-color: var(--rosso); background: var(--rosso-t); }
+.caselle.mini .casella { width: 9px; height: 9px; border-width: 1px; }
 
 /* Bottoni */
-button, .btn { font: inherit; border: 0; border-radius: 12px; min-height: 48px; padding: 10px 18px; cursor: pointer;
-  background: var(--accent); color: var(--accent-ink); font-weight: 600; width: 100%; }
-button.secondary, .btn.secondary { background: var(--card); color: var(--accent); border: 1px solid var(--line); }
-button.danger { background: var(--no-bg); color: var(--no); }
-.actions { display: flex; gap: 10px; margin-top: 16px; }
-.actions > * { flex: 1; }
-input[type=search] { width: 100%; font: inherit; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line);
-  background: var(--card); color: var(--ink); margin-bottom: 12px; min-height: 48px; -webkit-appearance: none; }
+button, .btn { font: inherit; font-weight: 600; border: 1px solid var(--ink); border-radius: 0;
+  min-height: 52px; padding: 12px 20px; cursor: pointer; background: var(--ink); color: var(--targa);
+  width: 100%; display: inline-flex; align-items: center; justify-content: center; text-align: center; }
+button.secondario, .btn.secondario { background: transparent; color: var(--ink); }
+button.rosso { background: var(--targa); color: var(--rosso); border-color: var(--rosso); }
+.azioni { display: flex; gap: 10px; margin-top: 22px; }
+.azioni > * { flex: 1; }
+input[type=search] { width: 100%; font: inherit; padding: 13px 14px; border: 1px solid var(--filo);
+  border-radius: 0; background: var(--targa); color: var(--ink); margin-bottom: 14px;
+  min-height: 50px; -webkit-appearance: none; }
 
-/* Quiz */
-.progress { display: flex; justify-content: space-between; color: var(--muted); font-size: 15px; margin-bottom: 12px; font-variant-numeric: tabular-nums; }
-.bar { height: 4px; background: var(--line); border-radius: 2px; margin-bottom: 16px; overflow: hidden; }
-.bar > i { display: block; height: 100%; background: var(--accent); }
-.question { font-size: 19px; font-weight: 600; margin-bottom: 16px; }
-.answers { display: flex; flex-direction: column; gap: 10px; }
-.answers button { text-align: left; background: var(--card); color: var(--ink); border: 1px solid var(--line); font-weight: 500; min-height: 56px; }
-.answers button.ok { background: var(--ok-bg); border-color: var(--ok); color: var(--ok); font-weight: 600; }
-.answers button.no { background: var(--no-bg); border-color: var(--no); color: var(--no); }
-.answers button:disabled { cursor: default; }
-.verdict { margin-top: 16px; font-weight: 600; }
-.verdict.ok { color: var(--ok); } .verdict.no { color: var(--no); }
+/* Domanda */
+.testata { display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  color: var(--ink-2); font-size: 14.5px; margin-bottom: 10px; }
+.testata .clock { font-size: 19px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.testata .clock.tardi { color: var(--rosso); }
+/* rotaia dell'esame: 16 segmenti, raggruppati per argomento */
+.rotaia { display: flex; gap: 3px; margin-bottom: 22px; }
+.rotaia i { flex: 1; height: 4px; background: var(--filo); }
+.rotaia i.fatto { background: var(--ink); }
+.rotaia i.qui { background: var(--rosso); }
+.rotaia .gap { flex: 0 0 8px; background: none; }
+.barra { height: 4px; background: var(--filo); margin-bottom: 22px; }
+.barra > i { display: block; height: 100%; background: var(--ink); }
+.domanda { font-size: 20px; line-height: 1.35; font-weight: 600; letter-spacing: -.01em; margin: 0 0 18px; }
+.risposte { display: flex; flex-direction: column; gap: 8px; }
+.risposte button { text-align: left; justify-content: flex-start; background: var(--targa);
+  color: var(--ink); border: 1px solid var(--filo); font-weight: 400; min-height: 56px; line-height: 1.35; }
+.risposte button.si { border-color: var(--verde); background: var(--verde-t); color: var(--verde); font-weight: 600; }
+.risposte button.no { border-color: var(--rosso); background: var(--rosso-t); color: var(--rosso); }
+.risposte button:disabled { cursor: default; opacity: 1; }
+.verdetto { margin-top: 18px; font-weight: 600; }
+.verdetto.si { color: var(--verde); } .verdetto.no { color: var(--rosso); }
+.esito-tit.passa { color: var(--verde); } .esito-tit.no { color: var(--rosso); }
 
-/* Percorsi */
-.steps { list-style: none; padding: 0; margin: 0 0 16px; counter-reset: s; }
-.steps li { padding: 10px 0 10px 40px; border-bottom: 1px solid var(--line); position: relative; counter-increment: s; }
-.steps li::before { content: counter(s); position: absolute; left: 0; top: 10px; width: 28px; height: 28px; border-radius: 50%;
-  background: var(--line); color: var(--muted); font-size: 13px; display: flex; align-items: center; justify-content: center; }
-.steps li.next { color: var(--muted); font-style: italic; }
-.steps li.no { color: var(--no); }
+/* Ripasso di una domanda sbagliata */
+.ripasso { background: var(--targa); border: 1px solid var(--filo); border-left: 4px solid var(--sez, var(--filo));
+  padding: 14px 16px; margin-bottom: 8px; }
+.ripasso .capo { color: var(--ink-2); font-size: 13.5px; margin: 0 0 6px; }
+.ripasso .q { font-weight: 600; margin: 0; }
+.ripasso .giusta { color: var(--verde); margin: 6px 0 0; }
 
-/* Flashcard */
-.flash { min-height: 220px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; cursor: pointer; }
-.flash .front { font-size: 22px; font-weight: 700; }
-.flash .back { font-size: 18px; }
-.flash .back ul { text-align: left; padding-left: 20px; margin: 8px 0 0; }
-.flash .hint { color: var(--muted); font-size: 14px; margin-top: 12px; }
-.chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-.chips button { width: auto; min-height: 40px; padding: 6px 14px; font-size: 15px; background: var(--card); color: var(--ink); border: 1px solid var(--line); }
-.chips button.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+/* IL PERCORSO COME LINEA: nodi, tratto, e i nomi in capitali da targa */
+.linea { list-style: none; margin: 0 0 24px; padding: 0; }
+.linea li { position: relative; padding: 0 0 0 34px; min-height: 46px; display: flex; align-items: center; }
+.linea li::before { content: ""; position: absolute; left: 6px; top: 0; bottom: 0; width: 2px; background: var(--ink); }
+.linea li:first-child::before { top: 50%; }
+.linea li:last-child::before { bottom: 50%; }
+.linea li:only-child::before { display: none; }
+.linea li::after { content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  width: 14px; height: 14px; border-radius: 50%; background: var(--ink); }
+.linea .via { font-family: var(--targhe); font-size: 17px; font-weight: 600; letter-spacing: .05em;
+  text-transform: uppercase; line-height: 1.25; padding: 8px 0; }
+.linea li.nuova { animation: entra .28s ease-out; }
+@keyframes entra { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.linea li.attesa::before, .linea li.attesa ~ li::before { background: var(--filo); }
+.linea li.attesa::after { background: var(--muro); border: 2px solid var(--filo); }
+.linea li.attesa .via { font-family: var(--sans); text-transform: none; letter-spacing: 0;
+  font-weight: 400; font-size: 15px; color: var(--ink-2); }
+/* capolinea: anello, come su una mappa del trasporto */
+.linea li.capolinea::after { background: var(--targa); border: 3px solid var(--ink); width: 16px; height: 16px; left: -1px; }
+.linea li.errata::after { background: var(--rosso); border-color: var(--rosso); }
+.linea li.errata .via { color: var(--rosso); }
 
-/* Statistiche */
-.kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.kpi { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; text-align: center; }
-.kpi b { display: block; font-size: 24px; font-variant-numeric: tabular-nums; }
-.kpi span { font-size: 13px; color: var(--muted); }
-.chart { display: flex; align-items: flex-end; gap: 4px; height: 120px; padding: 8px 0; border-bottom: 1px solid var(--line); }
-.chart i { flex: 1; background: var(--accent); border-radius: 3px 3px 0 0; min-height: 2px; opacity: .85; }
-.chart i.low { background: var(--no); }
-.empty { text-align: center; color: var(--muted); padding: 32px 0; }
+/* Il nome del percorso è un titolo, non una targa: le capitali restano ai nomi delle vie */
+.titolo-percorso { font-family: var(--targhe); font-size: 27px; font-weight: 600; letter-spacing: 0;
+  line-height: 1.2; margin: 0 0 6px; }
+.dove { color: var(--ink-2); font-size: 14.5px; margin: 0 0 20px; }
+.torna { display: inline-block; color: var(--ink-2); font-size: 14.5px; margin-bottom: 14px; }
 
-/* Esame */
-#clock.late { color: var(--no); }
-h1.pass { color: var(--ok); } h1.fail { color: var(--no); }
-table.temi { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-table.temi td { padding: 8px 0; border-bottom: 1px solid var(--line); }
-table.temi td:nth-child(2) { text-align: right; font-weight: 600; white-space: nowrap; }
-table.temi td + td { padding-left: 14px; }
-table.temi td:last-child { text-align: right; }
-table.temi tr:last-child td { border-bottom: 0; }
-table.temi tr.no td { color: var(--no); }
+/* Etichette di stato */
+.stato { font-size: 13px; padding: 3px 8px; border: 1px solid var(--filo); color: var(--ink-2); white-space: nowrap; }
+.stato.si { border-color: var(--verde); color: var(--verde); }
+.stato.no { border-color: var(--rosso); color: var(--rosso); }
+
+/* Selettori a pillola */
+.scelte { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.scelte button { width: auto; min-height: 40px; padding: 7px 14px; font-size: 14.5px; font-weight: 500;
+  background: transparent; color: var(--ink-2); border: 1px solid var(--filo); }
+.scelte button.on { background: var(--ink); color: var(--targa); border-color: var(--ink); }
+
+/* Carta da girare */
+.carta { background: var(--targa); border: 1px solid var(--filo); min-height: 230px; padding: 28px 22px;
+  display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; cursor: pointer; }
+.carta .fronte { font-family: var(--targhe); font-size: 25px; font-weight: 600; line-height: 1.25; margin: 0; }
+.carta .retro { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--filo); width: 100%; font-size: 17px; }
+.carta .retro ul { text-align: left; margin: 0; padding-left: 20px; }
+.carta .retro li { padding: 3px 0; }
+.carta .gira { color: var(--ink-2); font-size: 14px; margin-top: 14px; }
+
+/* Numeri grandi */
+.cifre { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--filo);
+  border: 1px solid var(--filo); }
+.cifra-box { background: var(--targa); padding: 14px 8px; text-align: center; }
+.cifra-box b { display: block; font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.cifra-box span { font-size: 13px; color: var(--ink-2); line-height: 1.3; display: block; margin-top: 2px; }
+
+/* Andamento */
+.grafico { display: flex; align-items: flex-end; justify-content: flex-start; gap: 4px;
+  height: 110px; border-bottom: 1px solid var(--filo); }
+.grafico i { flex: 1 1 0; max-width: 26px; background: var(--ink); min-height: 2px; }
+.grafico i.basso { background: var(--rosso); }
+.soglia { position: relative; border-top: 1px dashed var(--ink-2); margin-top: -1px; }
+.vuoto { text-align: center; color: var(--ink-2); padding: 36px 0; }
