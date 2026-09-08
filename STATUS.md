@@ -1,11 +1,14 @@
 # Status: QuizNCC
-Ultimo aggiornamento: 2026-09-08 12:10
+Ultimo aggiornamento: 2026-09-08 13:05
 
 ## Stato attuale
 Pubblicata su GitHub Pages. Aggiunta la **simulazione della prova scritta di Milano**
 (16 quiz 4+4+4+4, 30 minuti, soglia 12 e 2 per argomento) dopo aver verificato le regole
 sulle fonti ufficiali. Le 845 domande non di lingua sono classificate per argomento.
 Verificato con Puppeteer: composizione, le tre vie di bocciatura, tempo scaduto, zero errori JS.
+
+Fatto il giro di frontend: identità visiva costruita sulle targhe milanesi e sulla mappa
+del trasporto. Verificata a 390x844 in chiaro e scuro, e la logica ha ripassato tutti i test.
 
 ## Prossimi passi
 1. Far provare l'app all'amico su telefono; raccogliere cosa manca

@@ -40,6 +40,26 @@ L.R. 6/2012 art. 25 come riscritto dalla L.R. 2 del 29/01/2026.
 - Flashcard confluenze e cosa/dove (entrambe le direzioni)
 - Statistiche in localStorage: simulazioni superate, riuscita per argomento, andamento, copertura
 
+## Sistema visivo
+
+Riferimenti: le **targhe stradali** di Milano (capitali nere su smalto bianco) e la **mappa
+del trasporto** (l'itinerario disegnato come una linea di fermate, con i capolinea ad anello).
+
+| Ruolo | Valore |
+|---|---|
+| Fondo | `#e7e8ea` intonaco grigio freddo |
+| Superfici | `#ffffff` smalto |
+| Testo | `#000000` nero pieno, non un nero tinto |
+| Errore, bocciatura | `#c8102e` rosso dello stemma di Milano |
+| Sezioni d'esame | geo verde, leg blu, reg ocra, lingua viola: filetto di 4px |
+
+- **Archivo** per l'interfaccia, **Bodoni Moda** per i nomi delle vie e i titoli dei percorsi.
+  Offline ricade su Bodoni 72 / Didot, che su Apple sono di sistema.
+- Le **capitali sono riservate ai nomi delle vie**: sono le targhe. Titoli e liste in tondo.
+- Nessun raggio di curvatura, nessuna ombra: le superfici sono placche, non carte.
+- Regole tenute: niente etichette maiuscole sopra i titoli, niente numeri d'ordine dove non
+  c'è una sequenza, una sola animazione (la via che compare quando la scopri).
+
 ## Note Specifiche
 
 - Nell'xlsm la X in colonna A è la risposta dell'ultimo utente, NON quella esatta: l'esatta è `ok` in colonna Y.
