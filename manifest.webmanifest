@@ -1,0 +1,15 @@
+{
+  "name": "Quiz NCC",
+  "short_name": "Quiz NCC",
+  "description": "Preparazione all'esame di iscrizione al ruolo conducenti taxi e NCC (Milano)",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f3ee",
+  "theme_color": "#1f3a8a",
+  "lang": "it",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

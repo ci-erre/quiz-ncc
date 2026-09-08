@@ -1,0 +1,94 @@
+/* style.css — QuizNCC. Mobile-first, una colonna, tema chiaro/scuro automatico. */
+:root {
+  --bg: #f4f3ee; --card: #ffffff; --ink: #1b1b1f; --muted: #6b6b73; --line: #e2e1da;
+  --accent: #1f3a8a; --accent-ink: #ffffff; --ok: #2e7d4f; --ok-bg: #e3f3ea;
+  --no: #b3261e; --no-bg: #fbe7e5; --warn-bg: #fff4d6;
+  --radius: 14px; --pad: 16px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #131316; --card: #1e1e23; --ink: #ececf0; --muted: #a0a0aa; --line: #2e2e36;
+          --accent: #7f9cf5; --accent-ink: #0f1a3d; --ok: #6cc596; --ok-bg: #16351f;
+          --no: #f28b82; --no-bg: #3d1a17; --warn-bg: #3a2f10; }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink);
+  font: 17px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif; }
+a { color: var(--accent); text-decoration: none; }
+.top { display: flex; justify-content: space-between; align-items: center; padding: 12px var(--pad);
+  padding-top: max(12px, env(safe-area-inset-top)); border-bottom: 1px solid var(--line); background: var(--card); }
+.brand { font-weight: 700; color: var(--ink); font-size: 18px; }
+.toplink { font-weight: 600; min-height: 44px; display: inline-flex; align-items: center; }
+main { max-width: 640px; margin: 0 auto; padding: var(--pad); padding-bottom: max(32px, env(safe-area-inset-bottom)); }
+h1 { font-size: 22px; margin: 8px 0 16px; }
+h2 { font-size: 17px; margin: 24px 0 8px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+p { margin: 8px 0; }
+.muted { color: var(--muted); }
+.small { font-size: 14px; }
+
+/* Card e liste */
+.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--pad); margin-bottom: 12px; }
+.menu { display: grid; gap: 12px; }
+.menu a { display: block; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: var(--pad); color: var(--ink); min-height: 64px; }
+.menu a strong { display: block; font-size: 18px; }
+.menu a span { color: var(--muted); font-size: 15px; }
+.list { display: flex; flex-direction: column; gap: 8px; }
+.row { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--card);
+  border: 1px solid var(--line); border-radius: var(--radius); padding: 12px var(--pad); min-height: 56px; color: var(--ink); }
+.row .t { flex: 1; }
+.row .n { color: var(--muted); font-variant-numeric: tabular-nums; min-width: 2.2em; }
+.badge { font-size: 13px; padding: 2px 8px; border-radius: 999px; background: var(--line); color: var(--muted); white-space: nowrap; }
+.badge.ok { background: var(--ok-bg); color: var(--ok); }
+.badge.no { background: var(--no-bg); color: var(--no); }
+
+/* Bottoni */
+button, .btn { font: inherit; border: 0; border-radius: 12px; min-height: 48px; padding: 10px 18px; cursor: pointer;
+  background: var(--accent); color: var(--accent-ink); font-weight: 600; width: 100%; }
+button.secondary, .btn.secondary { background: var(--card); color: var(--accent); border: 1px solid var(--line); }
+button.danger { background: var(--no-bg); color: var(--no); }
+.actions { display: flex; gap: 10px; margin-top: 16px; }
+.actions > * { flex: 1; }
+input[type=search] { width: 100%; font: inherit; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line);
+  background: var(--card); color: var(--ink); margin-bottom: 12px; min-height: 48px; -webkit-appearance: none; }
+
+/* Quiz */
+.progress { display: flex; justify-content: space-between; color: var(--muted); font-size: 15px; margin-bottom: 12px; font-variant-numeric: tabular-nums; }
+.bar { height: 4px; background: var(--line); border-radius: 2px; margin-bottom: 16px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--accent); }
+.question { font-size: 19px; font-weight: 600; margin-bottom: 16px; }
+.answers { display: flex; flex-direction: column; gap: 10px; }
+.answers button { text-align: left; background: var(--card); color: var(--ink); border: 1px solid var(--line); font-weight: 500; min-height: 56px; }
+.answers button.ok { background: var(--ok-bg); border-color: var(--ok); color: var(--ok); font-weight: 600; }
+.answers button.no { background: var(--no-bg); border-color: var(--no); color: var(--no); }
+.answers button:disabled { cursor: default; }
+.verdict { margin-top: 16px; font-weight: 600; }
+.verdict.ok { color: var(--ok); } .verdict.no { color: var(--no); }
+
+/* Percorsi */
+.steps { list-style: none; padding: 0; margin: 0 0 16px; counter-reset: s; }
+.steps li { padding: 10px 0 10px 40px; border-bottom: 1px solid var(--line); position: relative; counter-increment: s; }
+.steps li::before { content: counter(s); position: absolute; left: 0; top: 10px; width: 28px; height: 28px; border-radius: 50%;
+  background: var(--line); color: var(--muted); font-size: 13px; display: flex; align-items: center; justify-content: center; }
+.steps li.next { color: var(--muted); font-style: italic; }
+.steps li.no { color: var(--no); }
+
+/* Flashcard */
+.flash { min-height: 220px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; cursor: pointer; }
+.flash .front { font-size: 22px; font-weight: 700; }
+.flash .back { font-size: 18px; }
+.flash .back ul { text-align: left; padding-left: 20px; margin: 8px 0 0; }
+.flash .hint { color: var(--muted); font-size: 14px; margin-top: 12px; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.chips button { width: auto; min-height: 40px; padding: 6px 14px; font-size: 15px; background: var(--card); color: var(--ink); border: 1px solid var(--line); }
+.chips button.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+/* Statistiche */
+.kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.kpi { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; text-align: center; }
+.kpi b { display: block; font-size: 24px; font-variant-numeric: tabular-nums; }
+.kpi span { font-size: 13px; color: var(--muted); }
+.chart { display: flex; align-items: flex-end; gap: 4px; height: 120px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.chart i { flex: 1; background: var(--accent); border-radius: 3px 3px 0 0; min-height: 2px; opacity: .85; }
+.chart i.low { background: var(--no); }
+.empty { text-align: center; color: var(--muted); padding: 32px 0; }
