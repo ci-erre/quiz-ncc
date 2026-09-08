@@ -92,3 +92,14 @@ input[type=search] { width: 100%; font: inherit; padding: 12px 14px; border-radi
 .chart i { flex: 1; background: var(--accent); border-radius: 3px 3px 0 0; min-height: 2px; opacity: .85; }
 .chart i.low { background: var(--no); }
 .empty { text-align: center; color: var(--muted); padding: 32px 0; }
+
+/* Esame */
+#clock.late { color: var(--no); }
+h1.pass { color: var(--ok); } h1.fail { color: var(--no); }
+table.temi { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+table.temi td { padding: 8px 0; border-bottom: 1px solid var(--line); }
+table.temi td:nth-child(2) { text-align: right; font-weight: 600; white-space: nowrap; }
+table.temi td + td { padding-left: 14px; }
+table.temi td:last-child { text-align: right; }
+table.temi tr:last-child td { border-bottom: 0; }
+table.temi tr.no td { color: var(--no); }

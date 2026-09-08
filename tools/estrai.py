@@ -9,6 +9,7 @@
 
 import json, re, sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent))
 import openpyxl
 
 def clean(s):
@@ -39,11 +40,12 @@ def domande(ws):
     if cur: out.append(cur)
     # Correzioni a mano su errori dell'xlsm (motivo a fianco).
     OVERRIDE = {786: 0}  # due 'ok' nel foglio; la SS 33 del Sempione parte dall'Arco della Pace
-    # Sezione lingua straniera: 869-949 inglese, 950-977 francese (verificato a mano sul foglio).
+    # Argomento della prova scritta (geo/leg/reg, en/fr per la lingua): vedi temi.py.
+    from temi import tema
     for d in out:
         if d["n"] in OVERRIDE: d["ok"] = OVERRIDE[d["n"]]
-        if 869 <= d["n"] <= 949: d["lang"] = "en"
-        elif d["n"] >= 950: d["lang"] = "fr"
+        d["t"] = tema(d)
+        if d["t"] == "?": warn.append(f"domanda {d['n']}: argomento non assegnato")
         if len(d["a"]) != 3: warn.append(f"domanda {d['n']}: {len(d['a'])} risposte")
         if d["ok"] is None: warn.append(f"domanda {d['n']}: nessuna risposta esatta")
     return out, warn

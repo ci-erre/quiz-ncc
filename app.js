@@ -1,29 +1,35 @@
 // app.js — QuizNCC
 //
 // Webapp statica per prepararsi all'esame di iscrizione al ruolo conducenti taxi/NCC
-// (Camera di Commercio di Milano). Dati in data/*.json, progressi in localStorage.
-// Navigazione a hash: #/quiz, #/errori, #/nuove, #/percorsi, #/percorso/12, #/confluenze,
-// #/cosadove, #/stats.
+// della Città Metropolitana di Milano. Dati in data/*.json, progressi in localStorage.
+// Navigazione a hash: #/esame, #/quiz, #/geo, #/leg, #/reg, #/lingua, #/errori, #/nuove,
+// #/percorsi, #/percorso/12, #/confluenze, #/cosadove, #/stats.
 
 'use strict';
 
 const N_QUIZ = 30;
 const STORE_KEY = 'quizncc.v1';
+// Prova scritta di Milano: 16 quiz, 4 per argomento, 30 minuti, si passa con 12 e almeno 2 per argomento.
+const ESAME = { perTema: 4, minuti: 30, minTot: 12, minTema: 2, temi: ['geo', 'leg', 'reg', 'lingua'] };
+const TEMA = { geo: 'Geografia', leg: 'Legislazione', reg: 'Regolamento comunale', en: 'Inglese', fr: 'Francese' };
+const MODE_LABEL = { esame: 'Simulazione d\'esame', quiz: 'Allenamento', errori: 'Ripasso errori', nuove: 'Domande nuove',
+  geo: 'Geografia', leg: 'Legislazione', reg: 'Regolamento comunale', lingua: 'Lingua' };
 const DB = {};
 let ST = loadState();
 let SESSION = null; // stato in memoria della prova in corso
+let TIMER = null;
 
 // ---------- Stato persistente ----------
 function loadState() {
   try {
     const s = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
-    return { sessions: s.sessions || [], q: s.q || {}, p: s.p || {}, f: s.f || {} };
-  } catch (e) { return { sessions: [], q: {}, p: {}, f: {} }; }
+    return { sessions: s.sessions || [], q: s.q || {}, p: s.p || {}, f: s.f || {}, lang: s.lang || 'en' };
+  } catch (e) { return { sessions: [], q: {}, p: {}, f: {}, lang: 'en' }; }
 }
 function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(ST)); } catch (e) { /* quota o privato: si continua senza memoria */ } }
 function stat(map, key) { return map[key] || (map[key] = { seen: 0, ok: 0, wrong: 0 }); }
-function addSession(mode, tot, ok, ref) {
-  ST.sessions.push({ t: Date.now(), mode, tot, ok, ref });
+function addSession(mode, tot, ok, extra) {
+  ST.sessions.push({ t: Date.now(), mode, tot, ok, ...(extra || {}) });
   if (ST.sessions.length > 500) ST.sessions.splice(0, ST.sessions.length - 500);
   save();
 }
@@ -33,81 +39,126 @@ function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { co
 function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 function pct(ok, tot) { return tot ? Math.round(100 * ok / tot) : 0; }
 function fmtDate(t) { return new Date(t).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }); }
+function mmss(s) { s = Math.max(0, Math.round(s)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; }
 function render(html) { document.getElementById('app').innerHTML = html; window.scrollTo(0, 0); }
 function on(sel, ev, fn) { document.querySelectorAll(sel).forEach(el => el.addEventListener(ev, fn)); }
 function go(hash) { location.hash = hash; }
+function temaDi(d) { return d.t === 'en' || d.t === 'fr' ? 'lingua' : d.t; }
+function temaLabel(d) { return TEMA[d.t] || ''; }
+function stopTimer() { if (TIMER) { clearInterval(TIMER); TIMER = null; } }
 
 // ---------- Home ----------
 function viewHome() {
   const viste = Object.keys(ST.q).length;
   const sbagliate = Object.values(ST.q).filter(s => s.wrong > 0).length;
   const perc = Object.values(ST.p).filter(s => s.seen > 0).length;
+  const esami = ST.sessions.filter(s => s.mode === 'esame');
+  const passati = esami.filter(s => s.pass).length;
+  const nLang = DB.domande.filter(d => d.t === ST.lang).length;
+  const count = t => DB.domande.filter(d => d.t === t).length;
   render(`
-    <h1>Cosa vuoi fare?</h1>
+    <h1>Esame di Milano</h1>
     <div class="menu">
-      <a href="#/quiz"><strong>Simulazione</strong><span>${N_QUIZ} domande a caso su ${DB.domande.length}</span></a>
+      <a href="#/esame"><strong>Simulazione d'esame</strong><span>16 quiz in 30 minuti, come la prova scritta.${esami.length ? ` Superate ${passati} su ${esami.length}.` : ''}</span></a>
+    </div>
+    <h2>Allenamento scritto</h2>
+    <div class="menu">
+      <a href="#/quiz"><strong>Tutto misto</strong><span>${N_QUIZ} domande a caso su ${DB.domande.length}</span></a>
+      <a href="#/geo"><strong>Geografia</strong><span>${count('geo')} domande: statali, laghi, fiumi, abitanti</span></a>
+      <a href="#/leg"><strong>Legislazione</strong><span>${count('leg')} domande: legge 21/92, leggi regionali, aeroporti</span></a>
+      <a href="#/reg"><strong>Regolamento comunale</strong><span>${count('reg')} domande: doveri, turni, tariffe, controlli</span></a>
+      <a href="#/lingua"><strong>${TEMA[ST.lang]}</strong><span>${nLang} domande di lingua, livello A2</span></a>
       <a href="#/errori"><strong>Ripassa gli errori</strong><span>${sbagliate ? sbagliate + ' domande sbagliate almeno una volta' : 'Ancora nessun errore registrato'}</span></a>
       <a href="#/nuove"><strong>Domande mai viste</strong><span>${DB.domande.length - viste} ancora da vedere</span></a>
-      <a href="#/en"><strong>Inglese</strong><span>${DB.domande.filter(d => d.lang === 'en').length} domande di lingua</span></a>
-      <a href="#/fr"><strong>Francese</strong><span>${DB.domande.filter(d => d.lang === 'fr').length} domande di lingua</span></a>
+    </div>
+    <div class="chips" style="margin-top:12px"><span class="muted small" style="align-self:center">Lingua scelta all'esame:</span>
+      <button data-lang="en" class="${ST.lang === 'en' ? 'on' : ''}">Inglese</button><button data-lang="fr" class="${ST.lang === 'fr' ? 'on' : ''}">Francese</button></div>
+    <h2>Orale</h2>
+    <div class="menu">
       <a href="#/percorsi"><strong>Percorsi</strong><span>${DB.percorsi.length} itinerari via per via, ${perc} già provati</span></a>
       <a href="#/confluenze"><strong>Confluenze</strong><span>${DB.confluenze.length} piazze e le vie che vi arrivano</span></a>
       <a href="#/cosadove"><strong>Cosa e dove</strong><span>${DB.cosadove.length} luoghi e il loro indirizzo</span></a>
     </div>
-    <p class="muted small" style="margin-top:24px">Quesiti della Camera di Commercio di Milano, edizione 22/11/2019. I progressi restano su questo dispositivo.</p>
+    <p class="muted small" style="margin-top:24px">Quesiti della Camera di Commercio di Milano, edizione 22/11/2019. Regole d'esame dal Programma della Città Metropolitana di Milano 2026. I progressi restano su questo dispositivo.</p>
   `);
+  on('[data-lang]', 'click', e => { ST.lang = e.currentTarget.dataset.lang; save(); viewHome(); });
 }
 
-// ---------- Quiz (simulazione, errori, nuove) ----------
+// ---------- Quiz ----------
 function pickQuestions(mode) {
   const all = DB.domande;
+  if (mode === 'esame') {
+    // 4 per argomento, nell'ordine della prova: geografia, legislazione, regolamento, lingua
+    return ESAME.temi.flatMap(t => shuffle(all.filter(d => temaDi(d) === t && (t !== 'lingua' || d.t === ST.lang))).slice(0, ESAME.perTema));
+  }
   if (mode === 'errori') {
     const wrong = all.filter(d => (ST.q[d.n] || {}).wrong > 0);
-    // prima le più sbagliate; a parità, ordine casuale
     return shuffle(wrong).sort((a, b) => ST.q[b.n].wrong - ST.q[a.n].wrong).slice(0, N_QUIZ);
   }
   if (mode === 'nuove') return shuffle(all.filter(d => !ST.q[d.n])).slice(0, N_QUIZ);
-  if (mode === 'en' || mode === 'fr') return shuffle(all.filter(d => d.lang === mode)).slice(0, N_QUIZ);
+  if (mode === 'lingua') return shuffle(all.filter(d => d.t === ST.lang)).slice(0, N_QUIZ);
+  if (mode in TEMA) return shuffle(all.filter(d => d.t === mode)).slice(0, N_QUIZ);
   return shuffle(all).slice(0, N_QUIZ);
 }
 function startQuiz(mode) {
   const items = pickQuestions(mode);
   if (!items.length) {
-    const msg = mode === 'errori' ? 'Nessun errore da ripassare. Fai una simulazione prima.' : 'Le hai viste tutte.';
+    const msg = mode === 'errori' ? 'Nessun errore da ripassare. Fai un allenamento prima.' : 'Le hai viste tutte.';
     return render(`<div class="empty"><p>${msg}</p></div><a class="btn" href="#/">Torna all'inizio</a>`);
   }
-  SESSION = { kind: 'quiz', mode, items, i: 0, ok: 0, wrong: [] , answered: null };
+  SESSION = { kind: 'quiz', mode, items, i: 0, ok: 0, wrong: [], answered: null, answers: [], deadline: mode === 'esame' ? Date.now() + ESAME.minuti * 60000 : null };
+  if (mode === 'esame') {
+    TIMER = setInterval(() => {
+      const el = document.getElementById('clock'); if (!el || !SESSION) return;
+      const left = (SESSION.deadline - Date.now()) / 1000;
+      el.textContent = mmss(left);
+      if (left <= 60) el.classList.add('late');
+      if (left <= 0) finishQuiz(true);
+    }, 500);
+  }
   viewQuestion();
 }
-const MODE_LABEL = { quiz: 'Simulazione', errori: 'Ripasso errori', nuove: 'Domande nuove', en: 'Inglese', fr: 'Francese' };
 function viewQuestion() {
   const s = SESSION, d = s.items[s.i];
-  const done = s.answered !== null;
+  // All'esame vero non c'è riscontro e non si correggono le risposte: si tocca e si va avanti.
+  const done = s.mode !== 'esame' && s.answered !== null;
+  const head = s.mode === 'esame'
+    ? `<span>${temaLabel(d)}</span><span>${s.i + 1} / ${s.items.length} · <b id="clock">${mmss((s.deadline - Date.now()) / 1000)}</b></span>`
+    : `<span>${MODE_LABEL[s.mode]}</span><span>${s.i + 1} / ${s.items.length} · esatte ${s.ok}</span>`;
   render(`
-    <div class="progress"><span>${MODE_LABEL[s.mode]}</span><span>${s.i + 1} / ${s.items.length} · esatte ${s.ok}</span></div>
+    <div class="progress">${head}</div>
     <div class="bar"><i style="width:${pct(s.i + (done ? 1 : 0), s.items.length)}%"></i></div>
-    <p class="muted small">Domanda n. ${d.n}</p>
+    <p class="muted small">${s.mode === 'esame' ? 'Domanda' : temaLabel(d) + ' · domanda'} n. ${d.n}</p>
     <div class="question">${esc(d.q)}</div>
     <div class="answers">
       ${d.a.map((a, k) => `<button data-k="${k}" ${done ? 'disabled' : ''} class="${done && k === d.ok ? 'ok' : done && k === s.answered ? 'no' : ''}">${esc(a)}</button>`).join('')}
     </div>
     ${done ? `<div class="verdict ${s.answered === d.ok ? 'ok' : 'no'}">${s.answered === d.ok ? 'Esatto.' : 'Sbagliato.'}</div>
       <div class="actions"><button id="next">${s.i + 1 < s.items.length ? 'Avanti' : 'Vedi il risultato'}</button></div>` : ''}
-    <p style="margin-top:24px"><a href="#/" class="muted small">Interrompi</a></p>
+    ${s.mode === 'esame' ? '<p class="muted small" style="margin-top:24px">Tocca la risposta: si passa avanti e non si torna indietro.</p>' : ''}
+    <p style="margin-top:${s.mode === 'esame' ? '8' : '24'}px"><a href="#/" class="muted small">Interrompi</a></p>
   `);
   if (!done) on('.answers button', 'click', e => answer(+e.currentTarget.dataset.k));
   else on('#next', 'click', nextQuestion);
 }
 function answer(k) {
   const s = SESSION, d = s.items[s.i], st = stat(ST.q, d.n);
-  s.answered = k; st.seen++;
+  s.answered = k; s.answers[s.i] = k; st.seen++;
   if (k === d.ok) { s.ok++; st.ok++; } else { st.wrong++; s.wrong.push(d); }
-  save(); viewQuestion();
+  save();
+  if (s.mode === 'esame') return nextQuestion();
+  viewQuestion();
 }
 function nextQuestion() {
   const s = SESSION;
   s.i++; s.answered = null;
   if (s.i < s.items.length) return viewQuestion();
+  finishQuiz(false);
+}
+function finishQuiz(timeout) {
+  const s = SESSION; if (!s) return;
+  stopTimer(); SESSION = null;
+  if (s.mode === 'esame') return viewEsito(s, timeout);
   addSession(s.mode, s.items.length, s.ok);
   const p = pct(s.ok, s.items.length);
   render(`
@@ -117,12 +168,43 @@ function nextQuestion() {
       <div class="kpi"><b>${s.items.length - s.ok}</b><span>errate</span></div>
       <div class="kpi"><b>${p}%</b><span>riuscita</span></div>
     </div>
-    ${s.wrong.length ? `<h2>Da rivedere</h2><div class="list">${s.wrong.map(d => `
-      <div class="card"><p class="muted small">Domanda n. ${d.n}</p><p><strong>${esc(d.q)}</strong></p><p class="verdict ok" style="margin-top:6px">${esc(d.a[d.ok])}</p></div>`).join('')}</div>` : ''}
+    ${daRivedere(s.wrong)}
     <div class="actions"><button id="again">Un'altra</button><a class="btn secondary" href="#/">Inizio</a></div>
   `);
   on('#again', 'click', () => startQuiz(s.mode));
-  SESSION = null;
+}
+function daRivedere(wrong) {
+  if (!wrong.length) return '';
+  return `<h2>Da rivedere</h2><div class="list">${wrong.map(d => `
+    <div class="card"><p class="muted small">${temaLabel(d)} · domanda n. ${d.n}</p><p><strong>${esc(d.q)}</strong></p><p class="verdict ok" style="margin-top:6px">${esc(d.a[d.ok])}</p></div>`).join('')}</div>`;
+}
+function viewEsito(s, timeout) {
+  // Le domande non raggiunte contano come errate: "l'omessa risposta equivale ad errore".
+  const perTema = {};
+  ESAME.temi.forEach(t => perTema[t] = { ok: 0, tot: 0 });
+  s.items.forEach((d, i) => { const t = temaDi(d); perTema[t].tot++; if (s.answers[i] === d.ok) perTema[t].ok++; });
+  const okTot = s.ok;
+  const deboli = ESAME.temi.filter(t => perTema[t].ok < ESAME.minTema);
+  const pass = okTot >= ESAME.minTot && deboli.length === 0;
+  addSession('esame', s.items.length, okTot, { pass, temi: perTema });
+  const label = t => t === 'lingua' ? TEMA[ST.lang] : TEMA[t];
+  const motivo = pass ? 'Almeno 12 su 16 e almeno 2 per ogni argomento.'
+    : okTot < ESAME.minTot && deboli.length ? `Sotto 12 su 16, e meno di 2 in ${deboli.map(label).join(', ')}.`
+    : okTot < ESAME.minTot ? 'Sotto 12 su 16.' : `Meno di 2 risposte giuste in ${deboli.map(label).join(', ')}, anche se il totale basta.`;
+  render(`
+    <h1 class="${pass ? 'pass' : 'fail'}">${pass ? 'Superato.' : 'Non superato.'}</h1>
+    ${timeout ? '<p class="verdict no">Tempo scaduto: le domande non raggiunte contano come errate.</p>' : ''}
+    <div class="kpis">
+      <div class="kpi"><b>${okTot}</b><span>esatte su 16</span></div>
+      <div class="kpi"><b>${mmss((s.deadline - Date.now()) / 1000)}</b><span>tempo rimasto</span></div>
+      <div class="kpi"><b>${pct(okTot, 16)}%</b><span>riuscita</span></div>
+    </div>
+    <p>${motivo}</p>
+    <div class="card"><table class="temi">${ESAME.temi.map(t => `<tr class="${perTema[t].ok < ESAME.minTema ? 'no' : ''}"><td>${label(t)}</td><td>${perTema[t].ok} / ${perTema[t].tot}</td></tr>`).join('')}</table></div>
+    ${daRivedere(s.items.filter((d, i) => s.answers[i] !== d.ok))}
+    <div class="actions"><button id="again">Un'altra simulazione</button><a class="btn secondary" href="#/">Inizio</a></div>
+  `);
+  on('#again', 'click', () => startQuiz('esame'));
 }
 
 // ---------- Percorsi ----------
@@ -165,11 +247,10 @@ function viewPercorso(n, mode, state) {
     on('#verifica, #verifica2', 'click', () => viewPercorso(n, 'verifica'));
     return;
   }
-  // Verifica: a ogni passo, la via successiva fra tre.
   if (!state) state = { i: 0, errors: 0, chosen: null, opts: null, wrongSteps: [] };
   if (state.i >= p.passi.length) {
     const st = stat(ST.p, n); st.seen++; if (state.errors === 0) st.ok++; st.wrong += state.errors;
-    addSession('percorso', p.passi.length, p.passi.length - state.errors, n); save();
+    addSession('percorso', p.passi.length, p.passi.length - state.errors, { ref: n }); save();
     return render(`
       <p class="small"><a href="#/percorsi">Percorsi</a></p>
       <h1>${state.errors === 0 ? 'Percorso pulito.' : state.errors + (state.errors === 1 ? ' errore.' : ' errori.')}</h1>
@@ -217,10 +298,9 @@ function viewFlash(kind, state) {
   const cats = isConf ? [] : ['Tutte', ...new Set(DB.cosadove.map(x => x.cat))];
   state = state || { cat: 'Tutte', dir: 'cosa', deck: null, i: 0, flipped: false, ok: 0, tot: 0 };
   if (!state.deck) {
-    const src = isConf ? DB.confluenze.map((c, k) => ({ key: 'c' + c.n, front: c.titolo, back: c.passi }))
+    const src = isConf ? DB.confluenze.map(c => ({ key: 'c' + c.n, front: c.titolo, back: c.passi }))
       : DB.cosadove.filter(x => state.cat === 'Tutte' || x.cat === state.cat)
           .map((x, k) => ({ key: 'd' + k, front: state.dir === 'cosa' ? x.cosa : x.dove, back: [state.dir === 'cosa' ? x.dove : x.cosa] }));
-    // prima le carte sbagliate, poi le mai viste, poi il resto
     state.deck = shuffle(src).sort((a, b) => rank(b) - rank(a));
     state.i = 0; state.flipped = false;
   }
@@ -259,6 +339,7 @@ function viewFlash(kind, state) {
 
 // ---------- Statistiche ----------
 function viewStats() {
+  const esami = ST.sessions.filter(s => s.mode === 'esame');
   const qs = ST.sessions.filter(s => s.mode in MODE_LABEL);
   const viste = Object.keys(ST.q).length, tot = DB.domande.length;
   const sbagliate = Object.entries(ST.q).filter(([, s]) => s.wrong > 0);
@@ -267,17 +348,28 @@ function viewStats() {
   const last = qs.slice(-20);
   const topWrong = sbagliate.sort((a, b) => b[1].wrong - a[1].wrong).slice(0, 10)
     .map(([n, s]) => ({ d: DB.domande.find(x => x.n === +n), s })).filter(x => x.d);
-  const allOk = qs.reduce((a, s) => a + s.ok, 0), allTot = qs.reduce((a, s) => a + s.tot, 0);
+  // riuscita per argomento, su tutte le risposte date
+  const perTema = {};
+  for (const [n, s] of Object.entries(ST.q)) {
+    const d = DB.domande.find(x => x.n === +n); if (!d) continue;
+    const k = d.t; perTema[k] = perTema[k] || { ok: 0, seen: 0 }; perTema[k].ok += s.ok; perTema[k].seen += s.seen;
+  }
+  const temiRows = ['geo', 'leg', 'reg', 'en', 'fr'].filter(t => perTema[t]).map(t => {
+    const p = pct(perTema[t].ok, perTema[t].seen);
+    return `<tr class="${p < 60 ? 'no' : ''}"><td>${TEMA[t]}</td><td>${p}%</td><td class="muted small">${perTema[t].seen} risposte</td></tr>`;
+  }).join('');
   render(`
     <h1>Statistiche</h1>
     <div class="kpis">
-      <div class="kpi"><b>${qs.length}</b><span>prove fatte</span></div>
-      <div class="kpi"><b>${pct(allOk, allTot)}%</b><span>riuscita totale</span></div>
-      <div class="kpi"><b>${last.length ? pct(last[last.length - 1].ok, last[last.length - 1].tot) + '%' : '–'}</b><span>ultima prova</span></div>
+      <div class="kpi"><b>${esami.length}</b><span>simulazioni</span></div>
+      <div class="kpi"><b>${esami.filter(s => s.pass).length}</b><span>superate</span></div>
+      <div class="kpi"><b>${esami.length ? esami[esami.length - 1].ok + '/16' : '–'}</b><span>ultima</span></div>
     </div>
+    ${temiRows ? `<h2>Riuscita per argomento</h2><div class="card"><table class="temi">${temiRows}</table>
+      <p class="muted small">Sotto il 60% è il punto debole: all'esame servono almeno 2 giuste su 4 in ogni argomento.</p></div>` : ''}
     <h2>Ultime prove</h2>
-    ${last.length ? `<div class="card"><div class="chart">${last.map(s => `<i style="height:${pct(s.ok, s.tot)}%" class="${pct(s.ok, s.tot) < 60 ? 'low' : ''}" title="${fmtDate(s.t)}: ${s.ok}/${s.tot}"></i>`).join('')}</div>
-      <p class="muted small">${fmtDate(last[0].t)} → ${fmtDate(last[last.length - 1].t)}, altezza = percentuale di risposte esatte.</p></div>` : '<div class="empty">Nessuna prova ancora.</div>'}
+    ${last.length ? `<div class="card"><div class="chart">${last.map(s => `<i style="height:${pct(s.ok, s.tot)}%" class="${pct(s.ok, s.tot) < 75 ? 'low' : ''}" title="${fmtDate(s.t)}: ${s.ok}/${s.tot}"></i>`).join('')}</div>
+      <p class="muted small">${fmtDate(last[0].t)} → ${fmtDate(last[last.length - 1].t)}, altezza = percentuale di risposte esatte. Rosso sotto il 75%, la soglia di 12 su 16.</p></div>` : '<div class="empty">Nessuna prova ancora.</div>'}
     <h2>Copertura</h2>
     <div class="kpis">
       <div class="kpi"><b>${viste}</b><span>domande viste su ${tot}</span></div>
@@ -285,21 +377,21 @@ function viewStats() {
       <div class="kpi"><b>${percPuliti}/${percProvati}</b><span>percorsi puliti / provati</span></div>
     </div>
     ${topWrong.length ? `<h2>Sbagliate più spesso</h2><div class="list">${topWrong.map(({ d, s }) => `
-      <div class="card"><p class="muted small">Domanda n. ${d.n} · sbagliata ${s.wrong} su ${s.seen}</p><p><strong>${esc(d.q)}</strong></p><p class="verdict ok" style="margin-top:6px">${esc(d.a[d.ok])}</p></div>`).join('')}</div>` : ''}
+      <div class="card"><p class="muted small">${temaLabel(d)} · domanda n. ${d.n} · sbagliata ${s.wrong} su ${s.seen}</p><p><strong>${esc(d.q)}</strong></p><p class="verdict ok" style="margin-top:6px">${esc(d.a[d.ok])}</p></div>`).join('')}</div>` : ''}
     <h2>Dati</h2>
     <div class="card"><p class="small muted">Tutto resta in questo browser. Se cancelli i dati del sito, riparti da zero.</p>
       <div class="actions"><button id="reset" class="danger">Azzera i progressi</button></div></div>
   `);
-  on('#reset', 'click', () => { if (confirm('Cancellare tutte le statistiche?')) { ST = { sessions: [], q: {}, p: {}, f: {} }; save(); viewStats(); } });
+  on('#reset', 'click', () => { if (confirm('Cancellare tutte le statistiche?')) { ST = { sessions: [], q: {}, p: {}, f: {}, lang: ST.lang }; save(); viewStats(); } });
 }
 
 // ---------- Router ----------
 function route() {
   const parts = location.hash.replace(/^#\/?/, '').split('/');
-  SESSION = null;
+  stopTimer(); SESSION = null;
   switch (parts[0]) {
     case '': return viewHome();
-    case 'quiz': case 'errori': case 'nuove': case 'en': case 'fr': return startQuiz(parts[0]);
+    case 'esame': case 'quiz': case 'errori': case 'nuove': case 'geo': case 'leg': case 'reg': case 'lingua': return startQuiz(parts[0]);
     case 'percorsi': return viewPercorsi();
     case 'percorso': return viewPercorso(+parts[1]);
     case 'confluenze': return viewFlash('confluenze');

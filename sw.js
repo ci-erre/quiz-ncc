@@ -2,7 +2,7 @@
 //
 // Cache dell'app per l'uso offline. Cambiare VERSION a ogni deploy: la vecchia cache
 // viene buttata e i file ricaricati dalla rete.
-const VERSION = 'quizncc-2026-09-08a';
+const VERSION = 'quizncc-2026-09-08c';
 const FILES = ['./', 'index.html', 'style.css', 'app.js', 'manifest.webmanifest',
   'data/domande.json', 'data/percorsi.json', 'data/confluenze.json', 'data/cosadove.json',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-180.png'];

@@ -19,17 +19,33 @@ QuizNCC/
 ├── tools/quiz-ccia-milano-2019.xlsm  sorgente originale (ed. 22/11/2019)
 └── icons/                            PNG 180/192/512 generate con uno snippet PIL
 
+## L'esame vero (Citta Metropolitana di Milano)
+
+Prova scritta: **16 quiz** a 3 opzioni, **30 minuti**, quattro argomenti da 4 domande:
+geografia della Lombardia · legislazione nazionale/regionale e disciplina aeroportuale ·
+regolamento del Comune di Milano · **lingua straniera a scelta** (inglese, francese, tedesco,
+spagnolo) livello **A2**. Si passa con **12 su 16 e almeno 2 per ogni argomento**.
+Omessa risposta o correzione = errore. Poi orale su toponomastica di Milano e dei comuni
+sopra i 50.000 abitanti, e **itinerari di collegamento**: sono i percorsi del file.
+Fonte: Programma d'esame e Notizie utili della Citta Metropolitana, agg. 15/01/2026;
+L.R. 6/2012 art. 25 come riscritto dalla L.R. 2 del 29/01/2026.
+
 ## Funzionalita
 
-- Simulazione 30 domande, ripasso errori, domande mai viste, inglese, francese
+- **Simulazione d'esame**: 16 quiz 4+4+4+4, timer 30 minuti, esito con la regola dei 2 per argomento.
+  Nessun riscontro durante la prova: si tocca e si va avanti, come all'esame.
+- Allenamento per argomento (geografia, legislazione, regolamento, lingua), misto, errori, mai viste
+- Lingua scelta dalla home (inglese o francese: tedesco e spagnolo non sono nel file)
 - Percorsi: studio passo passo e verifica "qual è la prossima via" fra tre
 - Flashcard confluenze e cosa/dove (entrambe le direzioni)
-- Statistiche in localStorage: prove, andamento, copertura, domande più sbagliate
+- Statistiche in localStorage: simulazioni superate, riuscita per argomento, andamento, copertura
 
 ## Note Specifiche
 
 - Nell'xlsm la X in colonna A è la risposta dell'ultimo utente, NON quella esatta: l'esatta è `ok` in colonna Y.
 - Domanda 786 ha due `ok` nel foglio: override in `estrai.py`.
-- Domande 869-949 inglese, 950-977 francese: campo `lang` nel JSON.
+- Domande 869-949 inglese, 950-977 francese. Campo `t` nel JSON = argomento (`geo`/`leg`/`reg`/`en`/`fr`),
+  assegnato da `tools/temi.py`: regole a parole chiave piu una tabella OVERRIDE decisa a mano
+  rileggendo tutte le 845 domande. Ricontrollare gli OVERRIDE se si cambia il classificatore.
 - Deploy: cambiare `VERSION` in `sw.js`, commit, push. Pages pubblica da `main` in 1-2 minuti.
 - Verifica visiva: `python3 -m http.server 8765` + script Puppeteer a 390×844 (vedi memoria).
